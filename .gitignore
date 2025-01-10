@@ -3,3 +3,4 @@ tmp/*
 **/__pycache__
 good_module/*
 **/.Ds_Store
+.idea/
