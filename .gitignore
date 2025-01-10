@@ -4,3 +4,6 @@ tmp/*
 good_module/*
 **/.Ds_Store
 .idea/
+!Datasets/.gitkeep
+!good_module/.gitkeep
+!tmp/.gitkeep
