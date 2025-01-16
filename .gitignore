@@ -1,6 +1,7 @@
 Datasets/*
 tmp/*
 **/__pycache__
+**/*.pyc
 good_module/*
 **/.Ds_Store
 .idea/
