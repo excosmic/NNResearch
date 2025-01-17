@@ -28,7 +28,6 @@ def __cutting_from_raw_picture_win(
     mount_for_each_raw = [3, 6],
     process:'function' = None, # process is a function that will be used to process the image, and input must be a cv2 image.
     keep_original_name = False, # you will keep the original file name with new file name, your file name will be incredibly long. OMG, I don't know why you want to do this.
-    # TODO: function of keep_original_name needed.
 ):
     relative_path = os.path.abspath(relative_path)
     file_path = get_relative_paths(relative_path)
@@ -63,7 +62,6 @@ def cutting_from_raw_picture(
   mount_for_each_raw = [3, 6],
   process:'function' = None, # process is a function that will be used to process the image, and input must be a cv2 image.
   keep_original_name = False,
-  # TODO: function of keep_original_name needed.
 ):
     if os.name == 'nt': # if running on the windows.
         return __cutting_from_raw_picture_win(relative_path, save_to, cut_into, mount_for_each_raw, process, keep_original_name)
