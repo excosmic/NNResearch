@@ -26,6 +26,9 @@ def __cutting_from_raw_picture_win(
     save_to:str,
     cut_into = [300, 300], #[height, width]
     mount_for_each_raw = [3, 6],
+    process:'function' = None, # process is a function that will be used to process the image, and input must be a cv2 image.
+    keep_original_name = False, # you will keep the original file name with new file name, your file name will be incredibly long. OMG, I don't know why you want to do this.
+    # TODO: function of keep_original_name needed.
 ):
     relative_path = os.path.abspath(relative_path)
     file_path = get_relative_paths(relative_path)
@@ -39,15 +42,17 @@ def __cutting_from_raw_picture_win(
         if abspath.split('.')[-1] in ['jpg', 'png']:
             # Process for each 
             img = cv2.imread(abspath)
-            img_height, img_width = img.shape[0], img.shape[1]
+            originalName = each_path.split('\\')[-1]
             new_height, new_width = mount_for_each_raw[0]*cut_into[0], mount_for_each_raw[1]*cut_into[1]
             img = cv2.resize(img, dsize=(new_width, new_height), fx=1, fy=1)
             for y in range(mount_for_each_raw[0]):
                 for x in range(mount_for_each_raw[1]):
                     cut_img = img[y*cut_into[0]:(y+1)*cut_into[0], x*cut_into[1]:(x+1)*cut_into[1], :]
+                    if process!=None:
+                        cut_img = process(cut_img)
                     new_file_path = os.path.abspath(save_to) + f'\\{sample_type}'
                     if not os.path.exists(new_file_path):os.makedirs(new_file_path)
-                    cv2.imwrite(f'{new_file_path}\\{count}_{y}_{x}.jpg', cut_img)
+                    cv2.imwrite(f'{new_file_path}\\{f"{originalName}_" if keep_original_name else ""}{count}_{y}_{x}.jpg', cut_img)
             count += 1
     return ans
 
@@ -56,9 +61,12 @@ def cutting_from_raw_picture(
   save_to:str,
   cut_into=[300, 300], #[height, width]
   mount_for_each_raw = [3, 6],
+  process:'function' = None, # process is a function that will be used to process the image, and input must be a cv2 image.
+  keep_original_name = False,
+  # TODO: function of keep_original_name needed.
 ):
     if os.name == 'nt': # if running on the windows.
-        return __cutting_from_raw_picture_win(relative_path, save_to, cut_into, mount_for_each_raw)
+        return __cutting_from_raw_picture_win(relative_path, save_to, cut_into, mount_for_each_raw, process, keep_original_name)
     file_path = get_relative_paths(relative_path)
     ans = {}
     count = 0
@@ -68,27 +76,37 @@ def cutting_from_raw_picture(
         full_path = relative_path+each_path
         if full_path[-3:] in ['jpg', 'png']:
             img = cv2.imread(relative_path+'/'+each_path)
-            img_width = img.shape[1]
-            img_heigth = img.shape[0]
+            originalName = each_path.split('/')[-1]
             new_width, new_height = mount_for_each_raw[1]*cut_into[1], mount_for_each_raw[0]*cut_into[0]
             img = cv2.resize(img, dsize=(new_width, new_height), fx=1, fy=1)
             for y in range(mount_for_each_raw[0]):
                 for x in range(mount_for_each_raw[1]):
                     cut_img = img[y*cut_into[0]:(y+1)*cut_into[0], x*cut_into[1]:(x+1)*cut_into[1], :]
+                    if process!=None:
+                        cut_img = process(cut_img)
                     new_file_path = os.path.abspath(save_to)+f'/{sample_type}/'
                     if not os.path.exists(new_file_path):os.makedirs(new_file_path)
-                    cv2.imwrite(f'{new_file_path}{count}_{y}_{x}.jpg', cut_img)
+                    cv2.imwrite(f'{new_file_path}{f"{originalName}_" if keep_original_name else ""}{count}_{y}_{x}.jpg', cut_img)
             count += 1
     return ans
 
 
 # This class is used for torchvision.transforms.
 
-# TODO
+def __process(img:np.ndarray):
+    ans = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ans = cv2.medianBlur(ans, 5)
+    ans = cv2.adaptiveThreshold(ans, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 151, 2)
+    ans = cv2.medianBlur(ans, 5)
+    return ans
 
 if __name__ == '__main__':
     # 第一个参数是原来数据集的路径，第二个参数是切完后数据集的路径
     cutting_from_raw_picture(
-        'C:\\Users\\XY\\Desktop\\python_cut\\picture',
-        'C:\\Users\\XY\\Desktop\\python_cut\\result'
+        #'C:\\Users\\XY\\Desktop\\python_cut\\picture',
+        #'C:\\Users\\XY\\Desktop\\python_cut\\result',
+        cut_into=[300, 300],
+        mount_for_each_raw=[3,6],   # 如果不需要切图的话，请将这里的[3,6]改为[1,1]就可以了
+        process = __process,
+        keep_original_name=False,
     )
